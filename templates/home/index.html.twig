@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil - Ecommerce 3WA
+{% endblock %}
+
+{% block js %}
+	<script>
+		function addToCart(url, id) {
+			fetch(url, {
+				method: 'POST',
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest',
+					'Content-Type': 'application/json'
+				},
+			})
+					.then(response => response.json())
+					.then(data => {
+						// Mettez à jour votre panier ici
+						console.log(data);
+						if (data.cart) {
+							document.getElementById('cart-total').textContent = Object.keys(data.cart).length.toString();
+							document.getElementById('quantity-' + id).textContent = data.cart[id].quantity;
+						}
+					})
+					.catch((error) => {
+						console.error('Error:', error);
+					});
+		}
+
+	</script>
+{% endblock %}
+
+
+{% block body %}
+	<div class="wrapper">
+		<h1>Bienvenue sur myPhotoApplication !</h1>
+		<div class="photo-grid">
+			{% for photo in photos %}
+				<a href="{{ path('app_photo_show', { 'slug': photo.slug }) }}" class="photo-card-link">
+					<div class="photo-card">
+						<img class="photo-card__image" src="{{ photo.imageUrl }}" alt="{{ photo.title }}">
+						<div class="photo-card__info">
+							<h2 class="photo-card__title">{{ photo.title }}</h2>
+							{# <p class="photo-card__description">{{ photo.description }}</p> #}
+							<p class="photo-card__price">{{ photo.price }}€</p>
+							<div class="photo-card__tags">
+								{% for tag in photo.tags %}
+									<span class="photo-card__tag">{{ tag.name }}</span>
+								{% endfor %}
+							</div>
+							<button class="photo-card__button" onclick="addToCart('{{ path('app_cart_increment', {'id': photo.id}) }}', '{{ photo.id }}')">+</button>
+							<span id="quantity-{{ photo.id }}">0</span>
+							<button class="photo-card__button" onclick="addToCart('{{ path('app_cart_decrement', {'id': photo.id}) }}', '{{ photo.id }}')">-</button>
+							<button class="photo-card__button" onclick="addToCart('{{ path('app_cart_add', {'id': photo.id}) }}', '{{ photo.id }}')">Ajouter au panier</button>
+						</div>
+					</div>
+				</a>
+			{% endfor %}
+		</div>
+	</div>
+{% endblock %}
