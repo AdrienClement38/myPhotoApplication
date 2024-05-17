@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: PhotoRepository::class)]
 class Photo
@@ -15,21 +16,26 @@ class Photo
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['tag:read', 'photo:read'])]
     private ?int $id = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['tag:read', 'photo:read'])]
     private ?string $description = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['tag:read', 'photo:read'])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(['tag:read', 'photo:read'])]
     private ?string $imageUrl = null;
 
     #[ORM\Column(nullable: true)]
     private ?array $metaInfo = null;
 
     #[ORM\Column]
+    #[Groups(['tag:read', 'photo:read'])]
     private ?float $price = null;
 
     #[ORM\Column]

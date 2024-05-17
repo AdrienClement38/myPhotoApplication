@@ -2,34 +2,32 @@
 
 namespace App\Controller;
 
-use App\Repository\PhotoRepository;
+use App\Service\CartService;
+use Exception;
+use http\Client\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Attribute\Route;
-
+use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 #[Route('/cart', name: 'app_cart_')]
 class CartController extends AbstractController
 {
-    #[Route('/', name: 'show')]
-    public function index(SessionInterface $session, PhotoRepository $photoRepository): Response
+    private CartService $cartService;
+
+    public function __construct(CartService $cartService)
     {
-        $cart = $session->get('cart', []);
+        $this->cartService = $cartService;
+    }
 
-        $total = 0;
-        $datas = []; // Initialisation de $datas comme un tableau vide
-        foreach ($cart as $id => $item) {
-            $photo = $photoRepository->find($id);
-            $quantity = $item['quantity'];
-            $datas[] = [
-                'photo' => $photo,
-                'quantity' => $quantity
-            ];
 
-            $total += $photo->getPrice() * $quantity;
-        }
+    #[Route('/', name: 'show')]
+    public function index(): Response
+    {
+        $cart = $this->cartService->getCart();
+
+        list($total, $datas) =$this->cartService->showCart($cart);
 
         return $this->render('cart/index.html.twig', [
             'datas' => $datas,
@@ -37,103 +35,59 @@ class CartController extends AbstractController
         ]);
     }
 
+
+
+    /**
+     * @throws Exception
+     */
     #[Route('/add/{id}', name: 'add')]
-    public function addToCart(SessionInterface $session, PhotoRepository $photoRepository, int $id): JsonResponse
+    public function addToCart(SymfonyRequest $request, int $id): JsonResponse
     {
-        // Je recupère mon panier si il existe, sinon je le crée
-        $cart = $session->get('cart', []);
+        // Récupération de la quantité à partir de la requête
+        $data = json_decode($request->getContent(), true);
+        $quantity = $data['quantity'];
 
-        // Je récupère la photo que je souhaite ajouter au panier
-        $photo = $photoRepository->find($id);
-
-        if (!$photo) {
-            throw $this->createNotFoundException('Photo not found');
-        }
-
-        // Je regarde si la photo est dans le panier
-        if (isset($cart[$id])) {
-            $cart[$id]['quantity'] += 1;
-        } else {
-            $cart[$id] = [
-                'quantity' => 1
-            ];
-        }
-
-        // Je sauvegarde le panier mis à jour dans la session
-        $session->set('cart', $cart);
+        $cart = $this->cartService->addToCart($id, $quantity);
 
         return new JsonResponse(['cart' => $cart]);
     }
 
     #[Route('/remove/{id}', name: 'remove')]
-    public function removeFromCart(SessionInterface $session, int $id): Response
+    public function removeFromCart(int $id): Response
     {
-        $cart = $session->get('cart', []);
+        $this->cartService->removeFromCart($id);
 
-        // Je supprime la photo du panier
-        foreach ($cart as $key => $item) {
-            if ($key === $id) {
-                unset($cart[$key]);
-                break;
-            }
-        }
-
-        // Je sauvegarde le panier mis à jour dans la session
-        $session->set('cart', $cart);
-
-        // Redirection vers la page du panier ou autre page spécifiee
         return $this->redirectToRoute('app_home');
     }
+
+
 
     #[Route('/clear', name: 'clear')]
-    public function clearCart(SessionInterface $session): Response
+    public function clearCart(): Response
     {
-        $session->remove('cart');
+        $this->cartService->clearCart();
+
         return $this->redirectToRoute('app_home');
     }
 
-    // Méthodes incrémenter l'article du panier
+
 
     #[Route('/increment/{id}', name: 'increment')]
-    public function incrementItem(SessionInterface $session, int $id): Response
+    public function incrementItem(int $id): Response
     {
-        // Je recupère mon panier si il existe, sinon je le crée
-        $cart = $session->get('cart', []);
+        $this->cartService->incrementItem($id);
 
-        // Je regarde si la photo est dans le panier
-        if (isset($cart[$id])) {
-            $cart[$id]['quantity'] += 1;
-        }
-
-        // Je sauvegarde le panier mis à jour dans la session
-        $session->set('cart', $cart);
-
-        // Redirection vers la page du panier ou autre page spécifiee
         return $this->redirectToRoute('app_cart_show');
     }
 
-    // Methode decrémenter l'article du panier
+
 
     #[Route('/decrement/{id}', name: 'decrement')]
-    public function decrementItem(SessionInterface $session, int $id): Response
+    public function decrementItem(int $id): Response
     {
+        $this->cartService->decrementItem($id);
 
-        $cart = $session->get('cart', []);
-
-        // Je regarde si la photo est dans le panier
-        if (isset($cart[$id])) {
-
-            if ($cart[$id]['quantity'] === 1) {
-                unset($cart[$id]);
-            } else {
-                $cart[$id]['quantity'] -= 1;
-            }
-        }
-
-        // Je sauvegarde le panier mis à jour dans la session
-        $session->set('cart', $cart);
-
-        // Redirection vers la page du panier ou autre page spécifiee
         return $this->redirectToRoute('app_cart_show');
     }
+
 }

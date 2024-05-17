@@ -45,4 +45,34 @@ class TagRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+
+    public function findMostUsedTags()
+    {
+        return $this->createQueryBuilder('t')
+            ->select('t.name, COUNT(p.id) as HIDDEN count')
+            ->join('t.photos', 'p')
+            ->groupBy('t.id')
+            ->orderBy('count', 'DESC')
+            ->setMaxResults(4)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findByFilters(mixed $name, mixed $id)
+    {
+        $qb = $this->createQueryBuilder('t');
+
+        if (!is_null($name)) {
+            $qb->andWhere('t.name = :name')
+                ->setParameter('name', $name);
+        }
+
+        if (!is_null($id)) {
+            $qb->andWhere('t.id = :id')
+                ->setParameter('id', $id);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

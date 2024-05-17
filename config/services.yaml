@@ -6,6 +6,12 @@
 parameters:
 
 services:
+
+    App\Service\CartService:
+        arguments:
+            $session: '@Symfony\Component\HttpFoundation\Session\SessionInterface'
+            $photoRepository: '@App\Repository\PhotoRepository'
+
     App\Security\LoginFormAuthenticator:
         public: true
         arguments:

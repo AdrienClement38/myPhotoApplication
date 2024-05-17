@@ -8,22 +8,45 @@
 	</title>
 	<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>"> {% block stylesheets %}{% endblock %}
 
-	{% block javascripts %}
-		{% block importmap %}
-			{{ importmap('app') }}
-		{% endblock %}
-	{% endblock %}
-	{% block js %}{% endblock %}
-
 </head>
 <body>
 <header>
 	<nav class="navbar">
-		<div class="navbar__logo">
-			<a
-					href="{{ path('app_home') }}" class="links">
-				<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-			</a>
+		<div class="navbar__tags">
+			<li class="navbar__item">
+				<div class="dropdown">
+					<button onclick="toggleDropdown()" class="dropbtn"><span class="photo-card__tag">TAGS</span></button>
+					<div id="myDropdown" class="dropdown-content">
+						<div>
+							{% set arrayTags = tagService.getMostUsedTags() %}
+
+							<p>Most used Tags :</p>
+							{% for tag in arrayTags %}
+								<span class="photo-card__tag">{{ tag.name }}</span>
+							{% endfor %}
+						</div>
+
+						<div>
+							{{ render(controller('App\\Controller\\TagController::search')) }}
+						</div>
+					</div>
+				</div>
+			</li>
+
+		</div>
+
+		<div class="navbar__search">
+
+			<li class="navbar__item">
+
+				<div>
+					<h1>Bienvenue sur myPhotoApplication !</h1>
+
+					{{ render(controller('App\\Controller\\PhotoController::search')) }}
+
+				</div>
+
+			</li>
 		</div>
 		<ul class="navbar__menu">
 			<li class="navbar__item">
@@ -49,6 +72,9 @@
 						</button>
 						<div id="myDropdown" class="dropdown-content">
 							<a href="{{ path('app_user_show', { 'id': app.user.id }) }}">Profil</a>
+							{% if app.user and is_granted('ROLE_ADMIN') %}
+									<a href="{{ path('admin') }}" class="links">Dashboard</a>
+							{% endif %}
 							<a href="#">Paramètres</a>
 							<hr>
 							<a href="{{ path('app_logout') }}">
@@ -107,6 +133,16 @@
 <main>
 	{% block body %}{% endblock %}
 </main>
+
+
+{% block javascripts %}
+	{% block importmap %}
+		{{ importmap('app') }}
+	{% endblock %}
+{% endblock %}
+{% block js %}{% endblock %}
+
+
 <footer>
 	<p>&copy; 2024 Ecommerce 3WA. Tous droits réservés.</p>
 </footer>

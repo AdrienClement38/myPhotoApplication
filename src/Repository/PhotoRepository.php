@@ -45,4 +45,20 @@ class PhotoRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+    public function findByFilters(mixed $name, mixed $id)
+    {
+        $qb = $this->createQueryBuilder('p');
+
+        if (!is_null($name)) {
+            $qb->andWhere('p.name = :name')
+                ->setParameter('name', $name);
+        }
+
+        if (!is_null($id)) {
+            $qb->andWhere('p.id = :id')
+                ->setParameter('id', $id);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }
